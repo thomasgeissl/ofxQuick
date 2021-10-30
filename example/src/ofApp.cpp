@@ -18,7 +18,7 @@ void ofApp::update()
 {
 	_js.update();
 	_js.call("update");
-	ofLogNotice() << _js.callInt("getCounter");
+	// ofLogNotice() << _js.callInt("getCounter");
 }
 
 void ofApp::draw()

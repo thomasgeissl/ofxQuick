@@ -9,6 +9,7 @@ public:
     {
         rt = JS_NewRuntime();
         ctx = JS_NewContext(rt);
+        initConsole();
     }
     ~ofxQuickJs()
     {
@@ -90,6 +91,49 @@ public:
         // {
         //     JS_FreeValue(ctx, used[i]);
         // }
+    }
+    static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    {
+        for (int i = 0; i < argc; ++i)
+        {
+            const char *str = JS_ToCString(ctx, argv[i]);
+            ofLogNotice() << str;
+            JS_FreeCString(ctx, str);
+        }
+        return JS_UNDEFINED;
+    }
+        static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    {
+        for (int i = 0; i < argc; ++i)
+        {
+            const char *str = JS_ToCString(ctx, argv[i]);
+            ofLogWarning() << str;
+            JS_FreeCString(ctx, str);
+        }
+        return JS_UNDEFINED;
+    }
+    static JSValue js_console_error(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    {
+        for (int i = 0; i < argc; ++i)
+        {
+            const char *str = JS_ToCString(ctx, argv[i]);
+            ofLogError() << str;
+            JS_FreeCString(ctx, str);
+        }
+        return JS_UNDEFINED;
+    }
+    void initConsole()
+    {
+        JSValue global = JS_GetGlobalObject(ctx);
+
+        //Add console to globalThis
+        JSValue console = JS_NewObject(ctx);
+        JS_SetPropertyStr(ctx, global, "console", console);
+        JS_SetPropertyStr(ctx, console, "log", JS_NewCFunction(ctx, js_console_log, "log", 1));
+        JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_console_warn, "warn", 1));
+        JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_console_error, "error", 1));
+
+        JS_FreeValue(ctx, global);
     }
 
 protected:
