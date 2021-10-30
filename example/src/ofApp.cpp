@@ -3,8 +3,11 @@
 void ofApp::setup()
 {
 	ofSetFrameRate(120);
-	_js.evaluate("function foo(x, y) { return x + y; }");
+	ofSetLogLevel(OF_LOG_VERBOSE);
+	_js.setup("test.js");
+	// _js.evaluate("function foo(x, y) { return x + y; }");
 	_js.test();
+	_js.call("setup");
 }
 
 void ofApp::exit()
@@ -13,10 +16,15 @@ void ofApp::exit()
 
 void ofApp::update()
 {
+	_js.update();
+	_js.call("update");
+	ofLogNotice() << _js.callInt("getCounter");
 }
 
 void ofApp::draw()
 {
+	_js.draw();
+	_js.call("draw");
 }
 
 void ofApp::keyPressed(int key)

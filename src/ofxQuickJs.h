@@ -16,19 +16,56 @@ public:
         JS_FreeRuntime(rt);
     }
 
-    void setup(std::string path){
-
+    void setup(std::string path)
+    {
+        loadFileAndWatch(path);
     }
-    void update(){
-
+    void update()
+    {
     }
-    void draw(){
-
+    void draw()
+    {
     }
 
-    bool evaluate(std::string value){
+    void loadFileAndWatch(std::string path)
+    {
+        _files.push_back(path);
+        ifstream myfile(ofToDataPath(path));
+        std::string data;
+        if (myfile.is_open())
+        {
+            std::string line;
+            while (getline(myfile, line))
+            {
+                data += line;
+                data += "\n";
+            }
+            myfile.close();
+        }
+
+        ofLogVerbose("ofxQuickJs") << "successfull loaded js file";
+        evaluate(data);
+    }
+
+    bool evaluate(std::string value)
+    {
         auto cstring = value.c_str();
         return JS_IsException(JS_Eval(ctx, cstring, strlen(cstring), "<input>", JS_EVAL_FLAG_STRICT));
+    }
+    JSValue call(std::string name, std::vector<JSValue> args = {})
+    {
+        auto global = JS_GetGlobalObject(ctx);
+        auto fun = JS_GetPropertyStr(ctx, global, name.c_str());
+        // JSValue argv[] = {JS_NewInt32(ctx, 5), JS_NewInt32(ctx, 3)};
+        JSValue argv[] = {};
+        return JS_Call(ctx, fun, global, sizeof(argv) / sizeof(JSValue), argv);
+    }
+    int callInt(std::string name, std::vector<JSValue> args = {})
+    {
+        auto value = call(name, args);
+        int32_t result;
+        JS_ToInt32(ctx, &result, value);
+        return result;
     }
     void test()
     {
@@ -58,4 +95,5 @@ public:
 protected:
     JSRuntime *rt;
     JSContext *ctx;
+    std::vector<std::string> _files;
 };
