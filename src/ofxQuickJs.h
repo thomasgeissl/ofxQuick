@@ -1,5 +1,6 @@
 #pragma once
 #include "./quickjs/quickjs.h"
+#include "./quickjs/quickjs-libc.h"
 // https://linuxtut.com/en/16cdbc69d4fd4a3dccbf/
 
 class ofxQuickJs
@@ -7,14 +8,15 @@ class ofxQuickJs
 public:
     ofxQuickJs()
     {
-        rt = JS_NewRuntime();
-        ctx = JS_NewContext(rt);
-        initConsole();
+        _rt = JS_NewRuntime();
+        _ctx = JS_NewContext(_rt);
+        registerStdAndOsModules();
+        registerConsole();
     }
     ~ofxQuickJs()
     {
-        JS_FreeContext(ctx);
-        JS_FreeRuntime(rt);
+        JS_FreeContext(_ctx);
+        JS_FreeRuntime(_rt);
     }
 
     void setup(std::string path)
@@ -48,48 +50,61 @@ public:
         evaluate(data);
     }
 
-    bool evaluate(std::string value)
+    JSValue evaluate(std::string code)
     {
-        auto cstring = value.c_str();
-        return JS_IsException(JS_Eval(ctx, cstring, strlen(cstring), "<input>", JS_EVAL_FLAG_STRICT));
+        auto cstring = code.c_str();
+
+        auto value = JS_Eval(_ctx, cstring, strlen(cstring), "<input>", JS_EVAL_FLAG_STRICT);
+        if (JS_IsException(value))
+        {
+            auto ex = JS_GetException(_ctx);
+            auto msg = JS_GetPropertyStr(_ctx, ex, "message");
+            auto stack = JS_GetPropertyStr(_ctx, ex, "stack");
+            ofLogError() << "could not evaluate\n"
+                         << code;
+            ofLogNotice() << JS_ToCString(_ctx, msg);
+            ofLogNotice() << JS_ToCString(_ctx, stack);
+            return JS_UNDEFINED;
+        }
+        return value;
     }
     JSValue call(std::string name, std::vector<JSValue> args = {})
     {
-        auto global = JS_GetGlobalObject(ctx);
-        auto fun = JS_GetPropertyStr(ctx, global, name.c_str());
-        // JSValue argv[] = {JS_NewInt32(ctx, 5), JS_NewInt32(ctx, 3)};
+        auto global = JS_GetGlobalObject(_ctx);
+        auto fun = JS_GetPropertyStr(_ctx, global, name.c_str());
+        // JSValue argv[] = {JS_NewInt32(_ctx, 5), JS_NewInt32(_ctx, 3)};
         JSValue argv[] = {};
-        return JS_Call(ctx, fun, global, sizeof(argv) / sizeof(JSValue), argv);
+        return JS_Call(_ctx, fun, global, sizeof(argv) / sizeof(JSValue), argv);
     }
     int callInt(std::string name, std::vector<JSValue> args = {})
     {
         auto value = call(name, args);
         int32_t result;
-        JS_ToInt32(ctx, &result, value);
+        JS_ToInt32(_ctx, &result, value);
         return result;
     }
     void test()
     {
         // std::string jsCode = "function foo(x, y) { return x + y; }";
         // evaluate(jsCode);
-        // if (JS_IsException(JS_Eval(ctx, fooCode, strlen(fooCode), "<input>", JS_EVAL_FLAG_STRICT)))
+        // if (JS_IsException(JS_Eval(_ctx, fooCode, strlen(fooCode), "<input>", JS_EVAL_FLAG_STRICT)))
         // {
-        //     JS_FreeContext(ctx);
-        //     JS_FreeRuntime(rt);
+        //     JS_FreeContext(_ctx);
+        //     JS_FreeRuntime(_rt);
         // }
 
-        JSValue global = JS_GetGlobalObject(ctx);
-        JSValue foo = JS_GetPropertyStr(ctx, global, "foo");
-        JSValue argv[] = {JS_NewInt32(ctx, 5), JS_NewInt32(ctx, 3)};
-        JSValue jsResult = JS_Call(ctx, foo, global, sizeof(argv) / sizeof(JSValue), argv);
+        JSValue global = JS_GetGlobalObject(_ctx);
+        JSValue foo = JS_GetPropertyStr(_ctx, global, "foo");
+        JSValue argv[] = {JS_NewInt32(_ctx, 5), JS_NewInt32(_ctx, 3)};
+        JSValue jsResult = JS_Call(_ctx, foo, global, sizeof(argv) / sizeof(JSValue), argv);
         int32_t result;
-        JS_ToInt32(ctx, &result, jsResult);
+        JS_ToInt32(_ctx, &result, jsResult);
         ofLogNotice() << result;
 
         // JSValue used[] = {jsResult, argv[1], argv[0], foo, global};
         // for (int i = 0; i < sizeof(used) / sizeof(JSValue); ++i)
         // {
-        //     JS_FreeValue(ctx, used[i]);
+        //     JS_FreeValue(_ctx, used[i]);
         // }
     }
     static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
@@ -102,7 +117,7 @@ public:
         }
         return JS_UNDEFINED;
     }
-        static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    static JSValue js_console_warn(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
     {
         for (int i = 0; i < argc; ++i)
         {
@@ -122,22 +137,63 @@ public:
         }
         return JS_UNDEFINED;
     }
-    void initConsole()
+
+    template <class ListenerClass>
+    void registerMemberFunction(ListenerClass *listener, JSValue (ListenerClass::*listenerMethod)(JSContext *, JSValueConst, int, JSValueConst *))
     {
-        JSValue global = JS_GetGlobalObject(ctx);
+    }
 
-        //Add console to globalThis
-        JSValue console = JS_NewObject(ctx);
-        JS_SetPropertyStr(ctx, global, "console", console);
-        JS_SetPropertyStr(ctx, console, "log", JS_NewCFunction(ctx, js_console_log, "log", 1));
-        JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_console_warn, "warn", 1));
-        JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_console_error, "error", 1));
+    void registerFunction(std::string name, JSValue function)
+    {
+        JSValue global = JS_GetGlobalObject(_ctx);
+        JS_SetPropertyStr(_ctx, global, name.c_str(), function);
+    }
+    void registerStdAndOsModules()
+    {
+        js_init_module_std(_ctx, "std");
+        js_init_module_os(_ctx, "os");
+    }
+    void registerConsole()
+    {
+        JSValue global = JS_GetGlobalObject(_ctx);
+        JSValue console = JS_NewObject(_ctx);
+        JS_SetPropertyStr(_ctx, global, "console", console);
+        JS_SetPropertyStr(_ctx, console, "log", JS_NewCFunction(_ctx, js_console_log, "log", 1));
+        JS_SetPropertyStr(_ctx, console, "warn", JS_NewCFunction(_ctx, js_console_warn, "warn", 1));
+        JS_SetPropertyStr(_ctx, console, "error", JS_NewCFunction(_ctx, js_console_error, "error", 1));
 
-        JS_FreeValue(ctx, global);
+        JS_FreeValue(_ctx, global);
+    }
+
+    JSContext *getContext()
+    {
+        return _ctx;
+    }
+
+    JSValue js_setTimeout(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
+    {
+        // if (auto* pimpl = static_cast<EcmascriptEngine::Pimpl*>(JS_GetContextOpaque(ctx)))
+        // {
+        //     // TODO: Do this right
+        //     return pimpl->setTimeout(ctx, thisVal, argc, argv);
+        // }
+
+        return JS_EXCEPTION;
+    }
+
+    JSValue js_clearTimeout(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+    {
+        // if (auto* pimpl = static_cast<EcmascriptEngine::Pimpl*>(JS_GetContextOpaque(ctx)))
+        // {
+        //     // TODO: Do this right
+        //     return pimpl->clearTimeout();
+        // }
+
+        return JS_EXCEPTION;
     }
 
 protected:
-    JSRuntime *rt;
-    JSContext *ctx;
+    JSRuntime *_rt;
+    JSContext *_ctx;
     std::vector<std::string> _files;
 };

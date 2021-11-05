@@ -23,6 +23,16 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
+	int _magic;
+	static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int magic){
+		ofLogNotice() << "called wrapper function " << magic;
+	}
+    JSValue js_memberfunction(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    {
+		ofLogNotice() << "js_memberfunction";
+        return JS_UNDEFINED;
+    }
+
 private:
 ofxQuickJs _js;
 };
