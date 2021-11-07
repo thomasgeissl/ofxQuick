@@ -6,10 +6,6 @@ void ofApp::setup()
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	_js.setup("test.js");
 	_js.test();
-	_js.registerMemberFunction(this, &ofApp::js_memberfunction);
-	_js.registerFunction("test",
-						 JS_NewCFunctionMagic(_js.getContext(), &ofApp::js_memmberfunction_wrapper_magic, "magic", 0, JS_CFUNC_generic, _magic++));
-
 	_js.call("setup");
 }
 

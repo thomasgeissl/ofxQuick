@@ -2,11 +2,12 @@
 
 let counter = 0;
 
-// test();
+test();
 
 function setup() {}
 function update() {
   counter++;
+  //   log();
 }
 function draw() {}
 function foo(x, y) {

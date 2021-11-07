@@ -1,17 +1,20 @@
 #pragma once
-#include "./quickjs/quickjs.h"
-#include "./quickjs/quickjs-libc.h"
+#include "../libs/quickjs/quickjs.h"
+#include "../libs/quickjs/quickjs-libc.h"
 // https://linuxtut.com/en/16cdbc69d4fd4a3dccbf/
 
 class ofxQuickJs
 {
 public:
+    inline static std::map<int, void *> _map;
     ofxQuickJs()
     {
         _rt = JS_NewRuntime();
         _ctx = JS_NewContext(_rt);
+        JS_SetContextOpaque(_ctx, (void *) this);
         registerStdAndOsModules();
         registerConsole();
+	    registerTest();
     }
     ~ofxQuickJs()
     {
@@ -153,6 +156,8 @@ public:
         js_init_module_std(_ctx, "std");
         js_init_module_os(_ctx, "os");
     }
+    int _magic;
+
     void registerConsole()
     {
         JSValue global = JS_GetGlobalObject(_ctx);
@@ -165,6 +170,15 @@ public:
         JS_FreeValue(_ctx, global);
     }
 
+    void registerTest()
+    {
+        JSValue global = JS_GetGlobalObject(_ctx);
+        _map.insert( std::make_pair(_magic, this));
+        JS_SetPropertyStr(_ctx, global, "test", JS_NewCFunctionMagic(_ctx, js_memmberfunction_wrapper_magic, "test", 0, JS_CFUNC_generic, _magic));
+        _magic++;
+        JS_FreeValue(_ctx, global);
+    }
+
     JSContext *getContext()
     {
         return _ctx;
@@ -172,24 +186,20 @@ public:
 
     JSValue js_setTimeout(JSContext *ctx, JSValueConst thisVal, int argc, JSValueConst *argv)
     {
-        // if (auto* pimpl = static_cast<EcmascriptEngine::Pimpl*>(JS_GetContextOpaque(ctx)))
-        // {
-        //     // TODO: Do this right
-        //     return pimpl->setTimeout(ctx, thisVal, argc, argv);
-        // }
-
         return JS_EXCEPTION;
     }
 
     JSValue js_clearTimeout(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
     {
-        // if (auto* pimpl = static_cast<EcmascriptEngine::Pimpl*>(JS_GetContextOpaque(ctx)))
-        // {
-        //     // TODO: Do this right
-        //     return pimpl->clearTimeout();
-        // }
-
         return JS_EXCEPTION;
+    }
+	static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int magic){
+        auto object = (ofxQuickJs *) (_map[magic]);
+        return object->js_memberfunction(ctx, jsThis, argc, argv);
+	}
+    JSValue js_memberfunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv){
+        ofLogNotice() << "member function";
+        return JS_UNDEFINED;
     }
 
 protected:
