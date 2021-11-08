@@ -23,13 +23,14 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
-	int _magic;
-	static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int magic){
-		ofLogNotice() << "called wrapper function " << magic;
-	}
-    JSValue js_memberfunction(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    JSValue js_a(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
     {
-		ofLogNotice() << "js_memberfunction";
+		ofLogNotice() << "ofApp::js_a";
+        return JS_UNDEFINED;
+    }
+    JSValue js_b(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
+    {
+		ofLogNotice() << "ofApp::js_b";
         return JS_UNDEFINED;
     }
 

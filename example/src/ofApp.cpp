@@ -4,8 +4,9 @@ void ofApp::setup()
 {
 	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
+	_js.registerMemberFunction("a", this, &ofApp::js_a);
+	_js.registerMemberFunction("b", this, &ofApp::js_b);
 	_js.setup("test.js");
-	_js.test();
 	_js.call("setup");
 }
 
@@ -69,7 +70,3 @@ void ofApp::dragEvent(ofDragInfo dragInfo)
 void ofApp::gotMessage(ofMessage msg)
 {
 }
-
-// void ofApp::callableFromJs()
-// {
-// }

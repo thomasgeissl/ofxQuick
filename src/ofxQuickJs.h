@@ -6,15 +6,14 @@
 class ofxQuickJs
 {
 public:
-    inline static std::map<int, void *> _map;
+    inline static std::vector<std::function<JSValue(JSContext *, JSValueConst, int, JSValueConst *)>> _fmap;
     ofxQuickJs()
     {
         _rt = JS_NewRuntime();
         _ctx = JS_NewContext(_rt);
-        JS_SetContextOpaque(_ctx, (void *) this);
+        JS_SetContextOpaque(_ctx, (void *)this);
         registerStdAndOsModules();
         registerConsole();
-	    registerTest();
     }
     ~ofxQuickJs()
     {
@@ -88,14 +87,6 @@ public:
     }
     void test()
     {
-        // std::string jsCode = "function foo(x, y) { return x + y; }";
-        // evaluate(jsCode);
-        // if (JS_IsException(JS_Eval(_ctx, fooCode, strlen(fooCode), "<input>", JS_EVAL_FLAG_STRICT)))
-        // {
-        //     JS_FreeContext(_ctx);
-        //     JS_FreeRuntime(_rt);
-        // }
-
         JSValue global = JS_GetGlobalObject(_ctx);
         JSValue foo = JS_GetPropertyStr(_ctx, global, "foo");
         JSValue argv[] = {JS_NewInt32(_ctx, 5), JS_NewInt32(_ctx, 3)};
@@ -103,12 +94,6 @@ public:
         int32_t result;
         JS_ToInt32(_ctx, &result, jsResult);
         ofLogNotice() << result;
-
-        // JSValue used[] = {jsResult, argv[1], argv[0], foo, global};
-        // for (int i = 0; i < sizeof(used) / sizeof(JSValue); ++i)
-        // {
-        //     JS_FreeValue(_ctx, used[i]);
-        // }
     }
     static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
     {
@@ -142,11 +127,16 @@ public:
     }
 
     template <class ListenerClass>
-    void registerMemberFunction(ListenerClass *listener, JSValue (ListenerClass::*listenerMethod)(JSContext *, JSValueConst, int, JSValueConst *))
+    void registerMemberFunction(std::string name, ListenerClass *listener, JSValue (ListenerClass::*listenerMethod)(JSContext *, JSValueConst, int, JSValueConst *))
     {
+        JSValue global = JS_GetGlobalObject(_ctx);
+        _fmap.push_back(std::bind(listenerMethod, listener, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+        JS_SetPropertyStr(_ctx, global, name.c_str(), JS_NewCFunctionMagic(_ctx, js_memmberfunction_wrapper_magic, name.c_str(), 0, JS_CFUNC_generic, ofxQuickJs::_fmap.size() - 1));
+        JS_FreeValue(_ctx, global);
+        ofLogVerbose("ofxQuickJs") << "successfully registered member function " << ofxQuickJs::_fmap.size() - 1;
     }
 
-    void registerFunction(std::string name, JSValue function)
+    void registerProperty(std::string name, JSValue function)
     {
         JSValue global = JS_GetGlobalObject(_ctx);
         JS_SetPropertyStr(_ctx, global, name.c_str(), function);
@@ -156,7 +146,6 @@ public:
         js_init_module_std(_ctx, "std");
         js_init_module_os(_ctx, "os");
     }
-    int _magic;
 
     void registerConsole()
     {
@@ -167,15 +156,6 @@ public:
         JS_SetPropertyStr(_ctx, console, "warn", JS_NewCFunction(_ctx, js_console_warn, "warn", 1));
         JS_SetPropertyStr(_ctx, console, "error", JS_NewCFunction(_ctx, js_console_error, "error", 1));
 
-        JS_FreeValue(_ctx, global);
-    }
-
-    void registerTest()
-    {
-        JSValue global = JS_GetGlobalObject(_ctx);
-        _map.insert( std::make_pair(_magic, this));
-        JS_SetPropertyStr(_ctx, global, "test", JS_NewCFunctionMagic(_ctx, js_memmberfunction_wrapper_magic, "test", 0, JS_CFUNC_generic, _magic));
-        _magic++;
         JS_FreeValue(_ctx, global);
     }
 
@@ -193,11 +173,13 @@ public:
     {
         return JS_EXCEPTION;
     }
-	static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int magic){
-        auto object = (ofxQuickJs *) (_map[magic]);
-        return object->js_memberfunction(ctx, jsThis, argc, argv);
-	}
-    JSValue js_memberfunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv){
+    static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int index)
+    {
+        ofLogVerbose("ofxQuickJs") << "calling function " << index;
+        return ofxQuickJs::_fmap[index](ctx, jsThis, argc, argv);
+    }
+    JSValue js_memberfunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+    {
         ofLogNotice() << "member function";
         return JS_UNDEFINED;
     }

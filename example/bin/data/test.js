@@ -2,7 +2,8 @@
 
 let counter = 0;
 
-test();
+a();
+b();
 
 function setup() {}
 function update() {
