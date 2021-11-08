@@ -131,7 +131,7 @@ public:
     {
         JSValue global = JS_GetGlobalObject(_ctx);
         _fmap.push_back(std::bind(listenerMethod, listener, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
-        JS_SetPropertyStr(_ctx, global, name.c_str(), JS_NewCFunctionMagic(_ctx, js_memmberfunction_wrapper_magic, name.c_str(), 0, JS_CFUNC_generic, ofxQuickJs::_fmap.size() - 1));
+        JS_SetPropertyStr(_ctx, global, name.c_str(), JS_NewCFunctionMagic(_ctx, js_memmberfunction_wrapper_magic, name.c_str(), 0, JS_CFUNC_generic_magic, ofxQuickJs::_fmap.size() - 1));
         JS_FreeValue(_ctx, global);
         ofLogVerbose("ofxQuickJs") << "successfully registered member function " << ofxQuickJs::_fmap.size() - 1;
     }
@@ -175,13 +175,7 @@ public:
     }
     static JSValue js_memmberfunction_wrapper_magic(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv, int index)
     {
-        ofLogVerbose("ofxQuickJs") << "calling function " << index;
         return ofxQuickJs::_fmap[index](ctx, jsThis, argc, argv);
-    }
-    JSValue js_memberfunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
-    {
-        ofLogNotice() << "member function";
-        return JS_UNDEFINED;
     }
 
 protected:
