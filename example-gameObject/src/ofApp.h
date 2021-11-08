@@ -23,17 +23,5 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
-    JSValue js_a(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-    {
-		ofLogNotice() << "ofApp::js_a";
-        return JS_UNDEFINED;
-    }
-    JSValue js_b(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
-    {
-		ofLogNotice() << "ofApp::js_b";
-        return JS_UNDEFINED;
-    }
-
-private:
-ofxQuick::js _js;
+	ofxQuick::gameObject _go;
 };
