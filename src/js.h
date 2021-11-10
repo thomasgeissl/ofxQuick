@@ -10,7 +10,7 @@ namespace ofxQuick
     {
     public:
         inline static std::vector<std::function<JSValue(JSContext *, JSValueConst, int, JSValueConst *)>> _fmap;
-        js()
+        js() : _checkInterval(100)
         {
             _rt = JS_NewRuntime();
             _ctx = JS_NewContext(_rt);
@@ -27,6 +27,11 @@ namespace ofxQuick
         void setup(std::string path, bool liveReload = true)
         {
             loadFileAndWatch(path);
+        }
+
+        void update()
+        {
+            watchFiles();
         }
 
         void loadFileAndWatch(std::string path)
@@ -49,8 +54,9 @@ namespace ofxQuick
             evaluate(data);
         }
 
-        void clear() {
-
+        void clear()
+        {
+            _files.clear();
         }
 
         JSValue evaluate(std::string code)
@@ -76,7 +82,8 @@ namespace ofxQuick
             auto global = JS_GetGlobalObject(_ctx);
             auto fun = JS_GetPropertyStr(_ctx, global, name.c_str());
             JSValue argv[args.size()];
-            for(auto i = 0; i < args.size(); i++){
+            for (auto i = 0; i < args.size(); i++)
+            {
                 argv[i] = args[i];
             };
             return JS_Call(_ctx, fun, global, args.size(), argv);
@@ -88,7 +95,7 @@ namespace ofxQuick
             JS_ToInt32(_ctx, &result, value);
             return result;
         }
-      
+
         static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
         {
             for (int i = 0; i < argc; ++i)
@@ -173,8 +180,35 @@ namespace ofxQuick
         }
 
     protected:
+        std::time_t getTouchTimestamp(std::string path)
+        {
+            return std::filesystem::last_write_time(path);
+        }
+        void watchFiles()
+        {
+            if(_files.size() == 0){
+                return;
+            }
+            int timestamp = ofGetElapsedTimeMillis();
+
+            if (timestamp - _checkTimestamp > _checkInterval)
+            {
+                auto touchedTimestamp = getTouchTimestamp(_files[0]);
+                if(touchedTimestamp > _touchedTimestamp){
+                    clear();
+                    loadFileAndWatch(_files[0]);
+                    _touchedTimestamp = touchedTimestamp;
+                }
+
+                _checkTimestamp = timestamp;
+            }
+        }
+
         JSRuntime *_rt;
         JSContext *_ctx;
         std::vector<std::string> _files;
+        int _checkTimestamp;
+        int _checkInterval;
+        int _touchedTimestamp;
     };
 };

@@ -4,7 +4,7 @@ void ofApp::setup()
 {
 	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
-	_go.setup("go.js");
+	_go.setup(ofToDataPath("go.js"));
 }
 
 void ofApp::exit()

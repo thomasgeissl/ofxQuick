@@ -50,3 +50,10 @@ function mouseEntered(x, y) {
 function windowResized(width, height) {
   console.log(`js -> windowResized (${width}, ${height})`);
 }
+
+function dragEvent(x, y, files) {
+  console.log(`js -> dragEvent (${x}, ${y})`);
+  files.forEach((file) => {
+    console.log(file);
+  });
+}

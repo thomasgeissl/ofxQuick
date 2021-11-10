@@ -26,6 +26,7 @@ namespace ofxQuick
         }
         void onUpdate(ofEventArgs &e)
         {
+            _js.update();
             _js.call("update");
         }
         void onDraw(ofEventArgs &e)
@@ -89,18 +90,19 @@ namespace ofxQuick
         }
         void onDragEvent(ofDragInfo &e)
         {
-            ofLogNotice() << "TODO: dragInfo >> js world";
-            // _js.call("dragEvent", {
-            //                           JS_NewInt32(_js.getContext(), e.width),
-            //                           JS_NewInt32(_js.getContext(), e.height),
-            //                       });
+            auto arr = JS_NewArray(_js.getContext());
+            for (auto file : e.files)
+            {
+                // js_array_push(_js.getContext(), arr, 1, {JS_NewString(_js.getContext(), file.c_str())}, 0);
+            }
+
+            _js.call("dragEvent", {JS_NewInt32(_js.getContext(), e.position.x),
+                                   JS_NewInt32(_js.getContext(), e.position.y), arr});
         }
         void onMessageEvent(ofMessage &e)
         {
             ofLogNotice() << "TODO: message event >> js world";
             // _js.call("dragEvent", {
-            //                           JS_NewInt32(_js.getContext(), e.width),
-            //                           JS_NewInt32(_js.getContext(), e.height),
             //                       });
         }
 
