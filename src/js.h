@@ -17,6 +17,7 @@ namespace ofxQuick
             JS_SetContextOpaque(_ctx, (void *)this);
             registerStdAndOsModules();
             registerConsole();
+            registerProperty("test", JS_NewInt32(_ctx, 32));
         }
         ~js()
         {
@@ -137,10 +138,11 @@ namespace ofxQuick
             ofLogVerbose("ofxQuick::js") << "successfully registered member function " << ofxQuick::js::_fmap.size() - 1;
         }
 
-        void registerProperty(std::string name, JSValue function)
+        void registerProperty(std::string name, JSValue value)
         {
             JSValue global = JS_GetGlobalObject(_ctx);
-            JS_SetPropertyStr(_ctx, global, name.c_str(), function);
+            JS_SetPropertyStr(_ctx, global, name.c_str(), value);
+            JS_FreeValue(_ctx, global);
         }
         void registerStdAndOsModules()
         {
@@ -165,6 +167,14 @@ namespace ofxQuick
             return _ctx;
         }
 
+        int getInt(std::string name){
+            JSValue global = JS_GetGlobalObject(_ctx);
+            auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
+            int32_t result;
+            JS_ToInt32(_ctx, &result, value);
+            return result;
+        }
+
         JSValue js_setTimeout(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
         {
             return JS_EXCEPTION;
@@ -179,7 +189,6 @@ namespace ofxQuick
             return ofxQuick::js::_fmap[index](ctx, jsThis, argc, argv);
         }
 
-    protected:
         std::time_t getTouchTimestamp(std::string path)
         {
             return std::filesystem::last_write_time(path);
@@ -204,6 +213,15 @@ namespace ofxQuick
             }
         }
 
+        void setInt(std::string name, int value){
+            registerProperty(name, JS_NewInt32(_ctx, value));
+        }
+        void setFloat(std::string name, float value){
+            registerProperty(name, JS_NewFloat64(_ctx, value));
+        }
+        void setString(std::string name, std::string value){
+            registerProperty(name, JS_NewString(_ctx, value.c_str()));
+        }
         JSRuntime *_rt;
         JSContext *_ctx;
         std::vector<std::string> _files;

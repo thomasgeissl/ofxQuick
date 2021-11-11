@@ -2,6 +2,7 @@
 
 function setup() {
   console.log("js -> setup");
+  console.log(`vars set from oF: ${testInt}, ${testFloat}, ${testString}`);
 }
 
 function update() {
@@ -21,6 +22,7 @@ function keyPressed(key) {
 
 function keyReleased(key) {
   console.log(`js -> key released - ${key}`);
+  testInt++;
 }
 
 function mouseMoved(x, y) {

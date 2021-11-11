@@ -4,6 +4,9 @@ void ofApp::setup()
 {
 	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
+	_go._js.setInt("testInt", 1);
+	_go._js.setFloat("testFloat", 0.1);
+	_go._js.setString("testString", "string value");
 	_go.setup(ofToDataPath("go.js"));
 }
 
@@ -25,6 +28,12 @@ void ofApp::keyPressed(int key)
 
 void ofApp::keyReleased(int key)
 {
+	switch(key){
+		case ' ': {
+			ofLogNotice() << _go._js.getInt("testInt");
+			break;
+		}
+	}
 }
 
 void ofApp::mouseMoved(int x, int y)

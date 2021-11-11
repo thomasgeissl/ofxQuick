@@ -106,7 +106,7 @@ namespace ofxQuick
             //                       });
         }
 
-    protected:
+
         ofxQuick::js _js;
     };
 };
