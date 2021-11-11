@@ -174,6 +174,18 @@ namespace ofxQuick
             JS_ToInt32(_ctx, &result, value);
             return result;
         }
+        int getFloat(std::string name){
+            JSValue global = JS_GetGlobalObject(_ctx);
+            auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
+            double result;
+            JS_ToFloat64(_ctx, &result, value);
+            return result;
+        }
+        std::string getString(std::string name){
+            JSValue global = JS_GetGlobalObject(_ctx);
+            auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
+            return JS_ToCString(_ctx, value);
+        }
 
         JSValue js_setTimeout(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
         {
