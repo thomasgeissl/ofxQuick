@@ -218,6 +218,7 @@ namespace ofxQuick
                 if(touchedTimestamp > _touchedTimestamp){
                     clear();
                     loadFileAndWatch(_files[0]);
+                    ofNotifyEvent(_fileReloadedEvent, _files[0], this); 
                     _touchedTimestamp = touchedTimestamp;
                 }
 
@@ -240,5 +241,6 @@ namespace ofxQuick
         int _checkTimestamp;
         int _checkInterval;
         int _touchedTimestamp;
+        ofEvent<std::string> _fileReloadedEvent;
     };
 };

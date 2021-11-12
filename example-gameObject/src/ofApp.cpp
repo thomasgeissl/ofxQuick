@@ -4,6 +4,7 @@ void ofApp::setup()
 {
 	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
+	ofxQuick::ofBindings::setup(_go._js._ctx);
 	_go._js.setInt("testInt", 1);
 	_go._js.setFloat("testFloat", 0.1);
 	_go._js.setString("testString", "string value");

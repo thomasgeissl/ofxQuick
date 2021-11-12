@@ -22,6 +22,7 @@ namespace ofxQuick
             ofAddListener(ofEvents().windowResized, this, &ofxQuick::gameObject::onWindowResized, OF_EVENT_ORDER_AFTER_APP);
             ofAddListener(ofEvents().fileDragEvent, this, &ofxQuick::gameObject::onDragEvent, OF_EVENT_ORDER_AFTER_APP);
             ofAddListener(ofEvents().messageEvent, this, &ofxQuick::gameObject::onMessageEvent, OF_EVENT_ORDER_AFTER_APP);
+            ofAddListener(_js._fileReloadedEvent, this, &ofxQuick::gameObject::onFileReloadedEvent);
             _js.call("setup");
         }
         void onUpdate(ofEventArgs &e)
@@ -104,6 +105,9 @@ namespace ofxQuick
             ofLogNotice() << "TODO: message event >> js world";
             // _js.call("dragEvent", {
             //                       });
+        }
+        void onFileReloadedEvent(std::string & path){
+            _js.call("setup");
         }
 
 
