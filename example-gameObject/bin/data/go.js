@@ -14,8 +14,8 @@ function setup() {
 function update() {
   // console.log("js -> update");
   frameCounter++;
-  x = x + (1 % 1000);
-  y = y + (1 % 1000);
+  x = (x + 1) % 1000;
+  y = (y + 1) % 1000;
 }
 
 function draw() {
