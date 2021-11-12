@@ -1,6 +1,5 @@
 // import * as std from "std";
 
-let frameCounter = 0;
 let x = 0;
 let y = 0;
 let width = 100;
@@ -8,19 +7,21 @@ let height = 100;
 function setup() {
   console.log("js -> setup");
   console.log(`vars set from oF: ${testInt}, ${testFloat}, ${testString}`);
-  frameCounter = 0;
+  of.setClipboardString("js -> setup");
+  of.setFrameRate(60);
 }
 
 function update() {
   // console.log("js -> update");
-  frameCounter++;
-  x = (x + 1) % 1000;
-  y = (y + 1) % 1000;
+  // console.log(of.getFrameRate());
+  x = (x + 1) % of.getWidth();
+  y = (y + 1) % of.getHeight();
 }
 
 function draw() {
   // console.log("js -> draw");
-  of.setColor(frameCounter % 255, 0, frameCounter % 255);
+  const frameNum = of.getFrameNum();
+  of.setColor(frameNum % 255, 0, frameNum % 255);
   of.drawRectangle(x, y, width, height);
 }
 function exit() {
