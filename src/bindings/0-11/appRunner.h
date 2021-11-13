@@ -1,7 +1,4 @@
 #pragma once
-#include "ofMain.h"
-
-#pragma once
 #include "./js.h"
 static void registerAppRunner(JSContext *ctx)
 {

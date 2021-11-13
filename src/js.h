@@ -1,7 +1,9 @@
 #pragma once
+#include "ofMain.h"
 #include "../libs/quickjs/quickjs.h"
 #include "../libs/quickjs/quickjs-libc.h"
 // https://linuxtut.com/en/16cdbc69d4fd4a3dccbf/
+#include "./ofBindings.h"
 
 namespace ofxQuick
 {
@@ -10,14 +12,10 @@ namespace ofxQuick
     {
     public:
         inline static std::vector<std::function<JSValue(JSContext *, JSValueConst, int, JSValueConst *)>> _fmap;
-        js() : _checkInterval(100)
+        js() : _checkInterval(100), _touchedTimestamp(ofGetElapsedTimeMillis()), _liveReload(false), _registerOfBindings(false),
+               _rt(JS_NewRuntime()),
+               _ctx(JS_NewContext(_rt))
         {
-            _rt = JS_NewRuntime();
-            _ctx = JS_NewContext(_rt);
-            JS_SetContextOpaque(_ctx, (void *)this);
-            registerStdAndOsModules();
-            registerConsole();
-            registerProperty("test", JS_NewInt32(_ctx, 32));
         }
         ~js()
         {
@@ -25,8 +23,17 @@ namespace ofxQuick
             JS_FreeRuntime(_rt);
         }
 
-        void setup(std::string path, bool liveReload = true)
+        void setup(std::string path, bool liveReload = true, bool registerOfBindings = true)
         {
+            _liveReload = liveReload;
+            _registerOfBindings = registerOfBindings;
+            _ctx = JS_NewContext(_rt);
+            JS_SetContextOpaque(_ctx, (void *)this);
+            registerStdAndOsModules();
+            registerConsole();
+            if(_registerOfBindings){
+	            ofxQuick::ofBindings::setup(_ctx);
+            }
             loadFileAndWatch(path);
         }
 
@@ -58,6 +65,7 @@ namespace ofxQuick
         void clear()
         {
             _files.clear();
+            JS_FreeContext(_ctx);
         }
 
         JSValue evaluate(std::string code)
@@ -74,6 +82,9 @@ namespace ofxQuick
                              << code;
                 ofLogNotice() << JS_ToCString(_ctx, msg);
                 ofLogNotice() << JS_ToCString(_ctx, stack);
+                JS_FreeValue(_ctx, ex);
+                JS_FreeValue(_ctx, msg);
+                JS_FreeValue(_ctx, stack);
                 return JS_UNDEFINED;
             }
             return value;
@@ -94,8 +105,10 @@ namespace ofxQuick
             auto value = call(name, args);
             int32_t result;
             JS_ToInt32(_ctx, &result, value);
+            // JS_FreeValue(_ctx, value);
             return result;
         }
+
 
         static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
         {
@@ -160,31 +173,49 @@ namespace ofxQuick
             JS_SetPropertyStr(_ctx, console, "error", JS_NewCFunction(_ctx, js_console_error, "error", 1));
 
             JS_FreeValue(_ctx, global);
+            // JS_FreeValue(_ctx, console);
         }
 
         JSContext *getContext()
         {
             return _ctx;
         }
+        void saveContext();
 
-        int getInt(std::string name){
+        void saveContext(JSContext *ctx)
+        {
+            _savedCtx = ctx;
+        }
+
+        void restoreContext(){
+            _ctx = _savedCtx;
+        }
+
+        int getInt(std::string name)
+        {
             JSValue global = JS_GetGlobalObject(_ctx);
             auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
             int32_t result;
             JS_ToInt32(_ctx, &result, value);
+            // JS_FreeValue(_ctx, value);
             return result;
         }
-        int getFloat(std::string name){
+        int getFloat(std::string name)
+        {
             JSValue global = JS_GetGlobalObject(_ctx);
             auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
             double result;
             JS_ToFloat64(_ctx, &result, value);
+            // JS_FreeValue(_ctx, value);
             return result;
         }
-        std::string getString(std::string name){
+        std::string getString(std::string name)
+        {
             JSValue global = JS_GetGlobalObject(_ctx);
             auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
-            return JS_ToCString(_ctx, value);
+            auto result =  JS_ToCString(_ctx, value);
+            // JS_FreeValue(_ctx, value);
+            return result;
         }
 
         JSValue js_setTimeout(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
@@ -207,7 +238,8 @@ namespace ofxQuick
         }
         void watchFiles()
         {
-            if(_files.size() == 0){
+            if (_files.size() == 0)
+            {
                 return;
             }
             int timestamp = ofGetElapsedTimeMillis();
@@ -215,10 +247,11 @@ namespace ofxQuick
             if (timestamp - _checkTimestamp > _checkInterval)
             {
                 auto touchedTimestamp = getTouchTimestamp(_files[0]);
-                if(touchedTimestamp > _touchedTimestamp){
+                if (touchedTimestamp > _touchedTimestamp)
+                {
                     clear();
-                    loadFileAndWatch(_files[0]);
-                    ofNotifyEvent(_fileReloadedEvent, _files[0], this); 
+                    setup(_files[0], _liveReload, _registerOfBindings);
+                    ofNotifyEvent(_fileReloadedEvent, _files[0], this);
                     _touchedTimestamp = touchedTimestamp;
                 }
 
@@ -226,21 +259,27 @@ namespace ofxQuick
             }
         }
 
-        void setInt(std::string name, int value){
+        void setInt(std::string name, int value)
+        {
             registerProperty(name, JS_NewInt32(_ctx, value));
         }
-        void setFloat(std::string name, float value){
+        void setFloat(std::string name, float value)
+        {
             registerProperty(name, JS_NewFloat64(_ctx, value));
         }
-        void setString(std::string name, std::string value){
+        void setString(std::string name, std::string value)
+        {
             registerProperty(name, JS_NewString(_ctx, value.c_str()));
         }
         JSRuntime *_rt;
         JSContext *_ctx;
+        JSContext *_savedCtx;
         std::vector<std::string> _files;
         int _checkTimestamp;
         int _checkInterval;
         int _touchedTimestamp;
         ofEvent<std::string> _fileReloadedEvent;
+        bool _liveReload;
+        bool _registerOfBindings;
     };
 };

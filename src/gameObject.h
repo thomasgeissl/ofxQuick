@@ -107,6 +107,7 @@ namespace ofxQuick
             //                       });
         }
         void onFileReloadedEvent(std::string & path){
+            ofLogVerbose("ofxQuick::gameObject") << "file has been reloaded";
             _js.call("setup");
         }
 
