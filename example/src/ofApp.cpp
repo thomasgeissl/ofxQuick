@@ -6,7 +6,7 @@ void ofApp::setup()
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	_js.registerMemberFunction("a", this, &ofApp::js_a);
 	_js.registerMemberFunction("b", this, &ofApp::js_b);
-	_js.setup("test.js");
+	_js.setup(ofToDataPath("test.js"));
 	_js.call("setup");
 }
 
@@ -23,7 +23,6 @@ void ofApp::update()
 
 void ofApp::draw()
 {
-	_js.draw();
 	_js.call("draw");
 }
 

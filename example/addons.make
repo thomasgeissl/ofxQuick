@@ -1,1 +1,1 @@
-ofxQuickJs
+ofxQuick
