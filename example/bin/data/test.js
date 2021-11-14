@@ -2,18 +2,14 @@
 
 let counter = 0;
 
-a();
-b();
-
 function setup() {}
 function update() {
   counter++;
-  //   log();
+  // a();
+  // b();
+  // log();
 }
 function draw() {}
-function foo(x, y) {
-  return x + y;
-}
 function getCounter() {
   return counter;
 }

@@ -23,6 +23,8 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
+	void onRegisterCustomBindings();
+
     JSValue js_a(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
     {
 		ofLogNotice() << "ofApp::js_a";

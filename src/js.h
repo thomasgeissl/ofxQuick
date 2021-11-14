@@ -31,15 +31,20 @@ namespace ofxQuick
             JS_SetContextOpaque(_ctx, (void *)this);
             registerStdAndOsModules();
             registerConsole();
-            if(_registerOfBindings){
-	            ofxQuick::ofBindings::setup(_ctx);
+            if (_registerOfBindings)
+            {
+                ofxQuick::ofBindings::setup(_ctx);
             }
+            ofNotifyEvent(_registerCustomBindingsEvent); //, null, this);
             loadFileAndWatch(path);
         }
 
         void update()
         {
-            watchFiles();
+            if (_liveReload)
+            {
+                watchFiles();
+            }
         }
 
         void loadFileAndWatch(std::string path)
@@ -108,7 +113,6 @@ namespace ofxQuick
             // JS_FreeValue(_ctx, value);
             return result;
         }
-
 
         static JSValue js_console_log(JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv)
         {
@@ -187,7 +191,8 @@ namespace ofxQuick
             _savedCtx = ctx;
         }
 
-        void restoreContext(){
+        void restoreContext()
+        {
             _ctx = _savedCtx;
         }
 
@@ -213,7 +218,7 @@ namespace ofxQuick
         {
             JSValue global = JS_GetGlobalObject(_ctx);
             auto value = JS_GetPropertyStr(_ctx, global, name.c_str());
-            auto result =  JS_ToCString(_ctx, value);
+            auto result = JS_ToCString(_ctx, value);
             // JS_FreeValue(_ctx, value);
             return result;
         }
@@ -279,6 +284,7 @@ namespace ofxQuick
         int _checkInterval;
         int _touchedTimestamp;
         ofEvent<std::string> _fileReloadedEvent;
+        ofEvent<void> _registerCustomBindingsEvent;
         bool _liveReload;
         bool _registerOfBindings;
     };

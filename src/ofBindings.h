@@ -22,6 +22,7 @@ namespace ofxQuick
             JS_SetPropertyStr(ctx, global, "of", of);
             registerAppRunner(ctx);
             registerGraphics(ctx);
+            registerEvents(ctx);
         }
     };
 };

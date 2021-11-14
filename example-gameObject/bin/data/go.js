@@ -4,6 +4,7 @@ let x = 0;
 let y = 0;
 let width = 200;
 let height = 200;
+let mousePressed = false;
 function setup() {
   console.log("js -> setup");
   console.log(`vars set from oF: ${testInt}, ${testFloat}, ${testString}`);
@@ -24,9 +25,10 @@ function draw() {
   // console.log("js -> draw");
   const frameNum = of.getFrameNum();
   of.setColor(frameNum % 255, 100, 255);
+  // console.log(`test ${ofGetMouseX()}`);
   of.drawRectangle(
-    frameNum % of.getWidth(),
-    frameNum % of.getHeight(),
+    mousePressed ? ofGetMouseX() : frameNum % of.getWidth(),
+    mousePressed ? ofGetMouseY() : frameNum % of.getHeight(),
     height,
     height
   );
@@ -67,12 +69,14 @@ function mouseDragged(x, y) {
 
 function mousePressed(x, y, button) {
   // console.log(`js -> mouse pressed - ((${x}, ${y}), ${button})`);
+  mousePressed = true;
   height = 100;
   width = 100;
 }
 
 function mouseReleased(x, y, button) {
   // console.log(`js -> mouse released - ((${x}, ${y}), ${button})`);
+  mousePressed = false;
   height = 200;
   width = 200;
 }
