@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxQuick.h"
 
-class ofApp : public ofBaseApp
+class ofApp : public ofBaseApp, public ofxQuick::listener
 {
 public:
 	void setup();

@@ -3,6 +3,7 @@
 #include "../libs/quickjs/quickjs.h"
 #include "../libs/quickjs/quickjs-libc.h"
 // https://linuxtut.com/en/16cdbc69d4fd4a3dccbf/
+#include "./listener.h"
 #include "./ofBindings.h"
 
 namespace ofxQuick
@@ -276,6 +277,11 @@ namespace ofxQuick
         {
             registerProperty(name, JS_NewString(_ctx, value.c_str()));
         }
+
+        void addListener(ofxQuick::listener* listener) {
+	        ofAddListener(_registerCustomBindingsEvent, listener, &ofxQuick::listener::onRegisterCustomBindings);
+        }
+
         JSRuntime *_rt;
         JSContext *_ctx;
         JSContext *_savedCtx;

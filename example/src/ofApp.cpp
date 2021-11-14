@@ -5,7 +5,7 @@ void ofApp::setup()
 	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
 
-	ofAddListener(_js._registerCustomBindingsEvent, this, &ofApp::onRegisterCustomBindings);
+	_js.addListener(this);
 	_js.setup(ofToDataPath("test.js"));
 	_js.call("setup");
 }
