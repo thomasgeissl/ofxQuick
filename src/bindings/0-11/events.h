@@ -11,7 +11,7 @@ static void registerEvents(JSContext *ctx)
                                                   "getMouseX", 0));
     JS_SetPropertyStr(ctx, of, "getMouseY", JS_NewCFunction(
                                                   ctx, [](JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) -> JSValue
-                                                  { return JS_NewInt32(ctx, ofGetMouseX()); },
+                                                  { return JS_NewInt32(ctx, ofGetMouseY()); },
                                                   "getMouseY", 0));
     // JS_SetPropertyStr(ctx, of, "getFrameRate", JS_NewCFunction(
     //                                                ctx, [](JSContext *ctx, JSValueConst jsThis, int argc, JSValueConst *argv) -> JSValue

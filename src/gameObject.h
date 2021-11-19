@@ -2,12 +2,12 @@
 #include "./js.h"
 namespace ofxQuick
 {
-    class gameObject
+    class gameObject : public listener
     {
     public:
         void setup(std::string path, bool liveReload = true)
         {
-            _js.setup(path, liveReload);
+            _js.addListener(this);
             ofAddListener(ofEvents().update, this, &ofxQuick::gameObject::onUpdate, OF_EVENT_ORDER_AFTER_APP);
             ofAddListener(ofEvents().draw, this, &ofxQuick::gameObject::onDraw, OF_EVENT_ORDER_BEFORE_APP);
             ofAddListener(ofEvents().exit, this, &ofxQuick::gameObject::onExit, OF_EVENT_ORDER_BEFORE_APP);
@@ -22,8 +22,7 @@ namespace ofxQuick
             ofAddListener(ofEvents().windowResized, this, &ofxQuick::gameObject::onWindowResized, OF_EVENT_ORDER_AFTER_APP);
             ofAddListener(ofEvents().fileDragEvent, this, &ofxQuick::gameObject::onDragEvent, OF_EVENT_ORDER_AFTER_APP);
             ofAddListener(ofEvents().messageEvent, this, &ofxQuick::gameObject::onMessageEvent, OF_EVENT_ORDER_AFTER_APP);
-            ofAddListener(_js._fileReloadedEvent, this, &ofxQuick::gameObject::onFileReloadedEvent);
-            _js.call("setup");
+            _js.setup(path, liveReload);
         }
         void onUpdate(ofEventArgs &e)
         {
@@ -106,12 +105,10 @@ namespace ofxQuick
             // _js.call("dragEvent", {
             //                       });
         }
-        void onFileReloadedEvent(std::string & path){
+        void onFileLoaded(std::string & path){
             ofLogVerbose("ofxQuick::gameObject") << "file has been reloaded";
             _js.call("setup");
         }
-
-
         ofxQuick::js _js;
     };
 };

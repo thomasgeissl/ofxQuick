@@ -1,12 +1,14 @@
 #include "ofApp.h"
 
+ofApp::ofApp(){}
+ofApp::ofApp(std::string path) : _jsFilePath(path){
+}
 void ofApp::setup()
 {
-	ofSetFrameRate(120);
 	ofSetLogLevel(OF_LOG_VERBOSE);
-
-	_js.addListener(this);
-	_js.setup(ofToDataPath("test.js"));
+	if(!_jsFilePath.empty()){
+		_go.setup(_jsFilePath);
+	}
 }
 
 void ofApp::exit()
@@ -15,14 +17,10 @@ void ofApp::exit()
 
 void ofApp::update()
 {
-	_js.update();
-	_js.call("update");
-	// ofLogNotice() << _js.callInt("getCounter");
 }
 
 void ofApp::draw()
 {
-	_js.call("draw");
 }
 
 void ofApp::keyPressed(int key)
@@ -67,9 +65,4 @@ void ofApp::dragEvent(ofDragInfo dragInfo)
 
 void ofApp::gotMessage(ofMessage msg)
 {
-}
-
-void ofApp::onRegisterCustomBindings(){
-	_js.registerMemberFunction("a", this, &ofApp::js_a);
-	_js.registerMemberFunction("b", this, &ofApp::js_b);
 }

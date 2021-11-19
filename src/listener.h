@@ -6,6 +6,6 @@ namespace ofxQuick
     {
     public:
         virtual void onRegisterCustomBindings(){}
-        virtual void onFileReloaded(std::string){}
+        virtual void onFileLoaded(std::string &file){}
     };
 };

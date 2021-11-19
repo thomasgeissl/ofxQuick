@@ -66,6 +66,7 @@ namespace ofxQuick
 
             ofLogVerbose("ofxQuick::js") << "successfull loaded js file";
             evaluate(data);
+            ofNotifyEvent(_fileLoadedEvent, path);
         }
 
         void clear()
@@ -257,7 +258,6 @@ namespace ofxQuick
                 {
                     clear();
                     setup(_files[0], _liveReload, _registerOfBindings);
-                    ofNotifyEvent(_fileReloadedEvent, _files[0], this);
                     _touchedTimestamp = touchedTimestamp;
                 }
 
@@ -280,6 +280,7 @@ namespace ofxQuick
 
         void addListener(ofxQuick::listener* listener) {
 	        ofAddListener(_registerCustomBindingsEvent, listener, &ofxQuick::listener::onRegisterCustomBindings);
+	        ofAddListener(_fileLoadedEvent, listener, &ofxQuick::listener::onFileLoaded);
         }
 
         JSRuntime *_rt;
@@ -289,8 +290,8 @@ namespace ofxQuick
         int _checkTimestamp;
         int _checkInterval;
         int _touchedTimestamp;
-        ofEvent<std::string> _fileReloadedEvent;
         ofEvent<void> _registerCustomBindingsEvent;
+        ofEvent<std::string> _fileLoadedEvent;
         bool _liveReload;
         bool _registerOfBindings;
     };
