@@ -13,7 +13,7 @@ namespace ofxQuick
     {
     public:
         inline static std::vector<std::function<JSValue(JSContext *, JSValueConst, int, JSValueConst *)>> _fmap;
-        js() : _checkInterval(100), _touchedTimestamp(ofGetElapsedTimeMillis()), _liveReload(false), _registerOfBindings(false),
+        js() : _checkInterval(100), _touchedTimestamp(ofGetElapsedTimeMillis()), _liveReload(true), _registerOfBindings(false),
                _rt(JS_NewRuntime()),
                _ctx(JS_NewContext(_rt))
         {
@@ -278,9 +278,10 @@ namespace ofxQuick
             registerProperty(name, JS_NewString(_ctx, value.c_str()));
         }
 
-        void addListener(ofxQuick::listener* listener) {
-	        ofAddListener(_registerCustomBindingsEvent, listener, &ofxQuick::listener::onRegisterCustomBindings);
-	        ofAddListener(_fileLoadedEvent, listener, &ofxQuick::listener::onFileLoaded);
+        void addListener(ofxQuick::listener *listener)
+        {
+            ofAddListener(_registerCustomBindingsEvent, listener, &ofxQuick::listener::onRegisterCustomBindings);
+            ofAddListener(_fileLoadedEvent, listener, &ofxQuick::listener::onFileLoaded);
         }
 
         JSRuntime *_rt;

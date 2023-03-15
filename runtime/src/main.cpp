@@ -6,7 +6,8 @@ int main(int argc, char *argv[]){
 	if(argc > 1){
 		ofRunApp(new ofApp(argv[1]));
 	}else{
-		ofLogError() << "please provide an absolute path to the js file you want to run. ofxQuickApp /path/to/file. thanks. bye.";
+		ofLogError() << "please provide an absolute path to the js file you want to run. \n\nruntime /path/to/file\n\n thanks. bye.";
+		return -1;
 	}
 	return 0;
 }
